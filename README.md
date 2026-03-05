@@ -1,21 +1,35 @@
 # oc-guard-skill
 
+## 公告 | Announcement
+
+`oc-guard-skill` 已正式发布到 GitHub 与 ClawHub。  
+This project is now publicly available on GitHub and ClawHub.
+
+- 目标：防止 OpenClaw 配置被误改导致服务中断。  
+  Goal: prevent OpenClaw outages caused by unsafe config edits.
+- 机制：先 `plan`，后 `apply --confirm`，失败自动回滚。  
+  Workflow: `plan` first, then `apply --confirm`, with automatic rollback on failure.
+
+## 简介 | Overview
+
+OpenClaw 配置安全守卫工具。  
 Safe config guard for OpenClaw.
 
-- Run `plan` to preview changes and risk.
-- Run `apply --confirm` to execute high-risk changes.
-- Includes backup + rollback and bilingual execution receipts.
+- 用 `plan` 预览变更和风险。 / Use `plan` to preview changes and risk.
+- 用 `apply --confirm` 执行高风险变更。 / Use `apply --confirm` for high-risk changes.
+- 内置备份与回滚。 / Built-in backup and rollback.
+- 输出中英并行执行回执。 / Bilingual execution receipts.
 
-## Features
+## 功能 | Features
 
-- Natural language to guarded config proposal (`plan`)
-- High-risk confirmation gate (`apply --confirm`)
-- Validation for channels/bindings/agents/models references
-- Auto backup before apply
-- Auto rollback on restart/health failure
-- Bilingual receipt output with 12-char signature
+- 自然语言转受控提案（`plan`） / Natural language to guarded proposal (`plan`)
+- 高风险确认门槛（`apply --confirm`） / High-risk confirmation gate
+- 校验渠道、绑定、agent、模型引用 / Validate channels, bindings, agents, model references
+- 应用前自动备份 / Auto backup before apply
+- 失败自动回滚 / Auto rollback on failure
+- 12位验签码执行回执 / 12-char signed execution receipt
 
-## Included Files
+## 包含文件 | Included Files
 
 - `SKILL.md`
 - `scripts/oc-guard`
@@ -23,19 +37,19 @@ Safe config guard for OpenClaw.
 - `docs/SAFETY.md`
 - `CHANGELOG.md`
 
-## Not Included
+## 不包含 | Not Included
 
-- Any personal config (`~/.openclaw/openclaw.json`)
-- Any logs/backups/runtime artifacts
-- Any API keys, tokens, app secrets
+- 个人配置文件（如 `~/.openclaw/openclaw.json`） / Personal config files
+- 日志、备份、运行产物 / Logs, backups, runtime artifacts
+- `apiKey`、`token`、`appSecret` 等敏感信息 / Secrets (`apiKey`, `token`, `appSecret`)
 
-## Prerequisites
+## 前置依赖 | Prerequisites
 
 - Python 3.9+
 - OpenClaw CLI
 - OpenCode CLI
 
-## Install
+## 安装 | Install
 
 ```bash
 chmod +x scripts/oc-guard
@@ -43,9 +57,10 @@ mkdir -p ~/.local/bin
 ln -sf "$PWD/scripts/oc-guard" ~/.local/bin/oc-guard
 ```
 
-## Environment Overrides
+## 环境变量覆盖 | Environment Overrides
 
-`oc-guard` supports these optional environment variables:
+支持以下可选环境变量：  
+Optional environment variables:
 
 - `OPENCLAW_HOME`
 - `OCGUARD_CONFIG_PATH`
@@ -55,42 +70,48 @@ ln -sf "$PWD/scripts/oc-guard" ~/.local/bin/oc-guard
 - `OCGUARD_RECEIPT_SECRET`
 - `OCGUARD_RECEIPT_SECRET_FILE`
 
-## Usage
+## 使用方法 | Usage
 
 ```bash
 oc-guard plan "add a new feishu bot and bind it to github agent"
 oc-guard apply --confirm "add a new feishu bot and bind it to github agent"
 ```
 
-Or with proposal file:
+或使用提案文件：  
+Or with a proposal file:
 
 ```bash
 oc-guard plan --proposal /tmp/openclaw-config-proposal.json
 oc-guard apply --confirm --proposal /tmp/openclaw-config-proposal.json
 ```
 
-## Output Contract
+## 输出协议 | Output Contract
 
+每条命令都会返回：  
 Every command returns:
 
 - `【执行回执 | Execution Receipt】`
-- executor / operation / request id / status / 12-char signature
+- `执行来源/操作类型/请求编号/执行状态/12位验签码`  
+  `executor/operation/request id/status/12-char signature`
 - `【本次内容 | Details】`
 
-If not executed, return:
+未执行时必须返回：  
+If not executed, must return:
 
 - `【模型说明-未执行】`
 
-## Security Notes
+## 安全说明 | Security Notes
 
-Never share runtime data from:
+请勿公开以下目录中的真实内容：  
+Do not publish real contents from:
 
 - `~/.openclaw/**`
 - `/tmp/openclaw*`
 - `/tmp/oc-guard-*`
 
-Keep path references in docs if needed, but do not publish real file contents.
+可以公开“路径说明”和“文件名”，不要公开真实配置与日志内容。  
+Path references and file names are okay; real config/log contents are not.
 
-## License
+## 许可证 | License
 
 MIT
