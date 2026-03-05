@@ -55,6 +55,7 @@ ALLOWED_PATH_PREFIXES = (
     "/tools",
 )
 SUPPORTED_CHANNEL_IDS = {"feishu", "telegram", "discord"}
+NON_EXEC_MARKER = "【模型说明-未执行】"
 
 
 def log(msg: str) -> None:
@@ -144,6 +145,13 @@ def emit_receipt(operation: str, request_id: str, status: str, content: str) -> 
     print(f"验签码 | Signature: {sig}")
     print("【本次内容 | Details】")
     print(body)
+
+
+def decorate_non_executed(status: str, message: str) -> str:
+    msg = (message or "").strip() or "无"
+    if status == "阻断" and NON_EXEC_MARKER not in msg:
+        return f"{NON_EXEC_MARKER}\n{msg}"
+    return msg
 
 
 def extract_json_object(text: str):
@@ -665,7 +673,8 @@ if __name__ == "__main__":
         operation = "QUERY"
         if len(sys.argv) > 1 and sys.argv[1] in {"plan", "apply"}:
             operation = sys.argv[1].upper()
-        emit_receipt(operation, build_request_id(), e.status, e.message)
+        content = decorate_non_executed(e.status, e.message)
+        emit_receipt(operation, build_request_id(), e.status, content)
         sys.exit(e.code)
     except Exception as e:
         msg = str(e)

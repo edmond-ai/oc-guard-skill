@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here.
 
+## [1.0.2] - 2026-03-05
+
+### Fixed
+- Added `【模型说明-未执行】` marker for blocked (`status=阻断`) non-executed paths in receipt details
+- Preserved existing execution receipt contract and apply backup/rollback behavior
+
 ## [1.0.1] - 2026-03-05
 
 ### Changed
