@@ -1,0 +1,46 @@
+# SAFETY
+
+## Scope
+
+This skill provides guarded OpenClaw config operations.
+
+- `plan`: preview and validate
+- `apply --confirm`: execute guarded changes
+
+## Security Principles
+
+1. Never directly edit production config without guard validation.
+2. Always create backup before apply.
+3. Fail closed on unknown or unsupported paths.
+4. Roll back automatically if restart/health check fails.
+5. Never expose secrets in logs or receipts.
+
+## Secret Handling
+
+Do not commit or publish:
+
+- API keys
+- tokens
+- app secrets
+- user-specific config files
+- runtime logs containing sensitive data
+
+## Publishing Checklist
+
+- No hardcoded secrets
+- No personal runtime data
+- No private logs/backups
+- README clearly states security boundaries
+- Example configs are sanitized
+
+## Execution Integrity
+
+Receipt output must include:
+
+- executor
+- operation
+- request id
+- status
+- signature (12 chars)
+
+If command is not executed, output must explicitly state non-execution.

@@ -1,0 +1,7 @@
+.openclaw/
+tmp/
+*.log
+*.bak
+*.secret
+*.env
+__pycache__/
