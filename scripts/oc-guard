@@ -26,6 +26,7 @@ LOG_PATH = Path("/tmp/openclaw-config-guard.log")
 ERROR_PATH = Path("/tmp/openclaw-config-guard-last-error.log")
 LAST_PROPOSAL_PATH = Path("/tmp/oc-guard-last-proposal.json")
 LAST_PLAN_PATH = Path("/tmp/oc-guard-last-plan.json")
+OPENCODE_DEBUG_PATH = Path("/tmp/oc-guard-last-opencode-output.txt")
 OPENCLAW_BIN = Path(
     os.environ.get("OCGUARD_OPENCLAW_BIN")
     or shutil.which("openclaw")
@@ -499,19 +500,49 @@ def generate_proposal(requirement: str, config_path: Path):
 4) 禁止 invent 字段，必须尽量复用现有结构。
 """.strip()
     proc = run([str(OPENCODE_BIN), "run", prompt], timeout=120, check=False)
-    raw = (proc.stdout or "").strip()
-    if not raw:
-        raw = (proc.stderr or "").strip()
+    stdout = (proc.stdout or "").strip()
+    stderr = (proc.stderr or "").strip()
+    raw = stdout or stderr
     if not raw:
         fail("opencode returned empty proposal")
 
     text = extract_json_object(raw)
     if not text:
-        fail("failed to extract JSON object from opencode output")
+        payload = {
+            "returncode": proc.returncode,
+            "stdout": stdout,
+            "stderr": stderr,
+        }
+        OPENCODE_DEBUG_PATH.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        log(
+            "opencode output is non-json; "
+            f"rc={proc.returncode}, stdout_len={len(stdout)}, stderr_len={len(stderr)}, "
+            f"debug_file={OPENCODE_DEBUG_PATH}"
+        )
+        fail(f"opencode output is not valid JSON; debug file: {OPENCODE_DEBUG_PATH}")
     try:
         return json.loads(text)
     except Exception as e:
-        fail(f"failed to parse proposal JSON: {e}")
+        payload = {
+            "returncode": proc.returncode,
+            "stdout": stdout,
+            "stderr": stderr,
+            "extracted_json": text,
+            "parse_error": str(e),
+        }
+        OPENCODE_DEBUG_PATH.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        log(
+            "opencode proposal parse failed; "
+            f"rc={proc.returncode}, stdout_len={len(stdout)}, stderr_len={len(stderr)}, "
+            f"debug_file={OPENCODE_DEBUG_PATH}"
+        )
+        fail(f"failed to parse proposal JSON: {e}; debug file: {OPENCODE_DEBUG_PATH}")
 
 
 def apply_changes(cfg, proposal):

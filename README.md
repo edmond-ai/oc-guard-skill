@@ -100,6 +100,9 @@ If not executed, must return:
 
 - `【模型说明-未执行】`
 
+`plan` 失败时可查看：`/tmp/oc-guard-last-opencode-output.txt`（仅用于本机诊断）。  
+If `plan` fails, inspect `/tmp/oc-guard-last-opencode-output.txt` for local diagnostics.
+
 ## 安全说明 | Security Notes
 
 请勿公开以下目录中的真实内容：  
@@ -111,6 +114,9 @@ Do not publish real contents from:
 
 可以公开“路径说明”和“文件名”，不要公开真实配置与日志内容。  
 Path references and file names are okay; real config/log contents are not.
+
+若 `oc-guard` 返回失败或阻断，禁止绕过 guard 直接修改配置文件。  
+If `oc-guard` returns failed/blocked, do not bypass guard by editing config directly.
 
 ## 许可证 | License
 

@@ -14,6 +14,7 @@ This skill provides guarded OpenClaw config operations.
 3. Fail closed on unknown or unsupported paths.
 4. Roll back automatically if restart/health check fails.
 5. Never expose secrets in logs or receipts.
+6. If `plan` or `apply` returns failed/blocked, never bypass `oc-guard` by directly editing config.
 
 ## Secret Handling
 
@@ -44,3 +45,5 @@ Receipt output must include:
 - signature (12 chars)
 
 If command is not executed, output must explicitly state non-execution.
+
+If proposal generation fails, inspect `/tmp/oc-guard-last-opencode-output.txt` for diagnostics.
