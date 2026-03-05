@@ -1,5 +1,9 @@
 # oc-guard-skill
 
+<p align="center">
+  <img src="docs/readme_logo.png" alt="oc-guard mascot with security shield" width="960" />
+</p>
+
 ## 公告 | Announcement
 
 `oc-guard-skill` 已正式发布到 GitHub 与 ClawHub。  
