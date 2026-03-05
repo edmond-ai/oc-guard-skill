@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here.
 
+## [1.0.1] - 2026-03-05
+
+### Changed
+- Updated README with bilingual (Chinese + English) content
+- Added release announcement section at README top for public sharing
+
 ## [1.0.0] - 2026-03-05
 
 ### Added
