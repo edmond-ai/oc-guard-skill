@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented here.
 
+## [1.0.3] - 2026-03-05
+
+### Fixed
+- Added local diagnostics for `plan` proposal failures by persisting raw `opencode` output to `/tmp/oc-guard-last-opencode-output.txt`
+- Improved failure messaging when proposal JSON extraction/parsing fails, including debug file location
+
+### Security
+- Documented and enforced no-bypass rule: do not directly edit config when `oc-guard` returns failed/blocked
+- Preserved execution receipt contract, high-risk confirmation gate, and backup/rollback flow
+
 ## [1.0.2] - 2026-03-05
 
 ### Fixed
