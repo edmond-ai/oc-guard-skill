@@ -17,6 +17,7 @@ This project is now publicly available on GitHub and ClawHub.
 ## 目录 | Table of Contents
 
 - [简介 | Overview](#简介--overview)
+- [工作流图 | Workflow Diagram](#工作流图--workflow-diagram)
 - [功能 | Features](#功能--features)
 - [包含文件 | Included Files](#包含文件--included-files)
 - [不包含 | Not Included](#不包含--not-included)
@@ -39,6 +40,12 @@ Safe config guard for OpenClaw.
 - 用 `apply --confirm` 执行高风险变更。 / Use `apply --confirm` for high-risk changes.
 - 内置备份与回滚。 / Built-in backup and rollback.
 - 输出中英并行执行回执。 / Bilingual execution receipts.
+
+## 工作流图 | Workflow Diagram
+
+<p align="center">
+  <img src="docs/workflow.png" alt="oc-guard safe config workflow diagram" width="960" />
+</p>
 
 ## 功能 | Features
 

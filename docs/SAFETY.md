@@ -7,6 +7,10 @@ This skill provides guarded OpenClaw config operations.
 - `plan`: preview and validate
 - `apply --confirm`: execute guarded changes
 
+## Security Diagram
+
+![oc-guard security principles infographic](docs.png)
+
 ## Security Principles
 
 1. Never directly edit production config without guard validation.
