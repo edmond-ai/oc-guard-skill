@@ -11,6 +11,7 @@ import secrets
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 
@@ -57,6 +58,7 @@ ALLOWED_PATH_PREFIXES = (
 )
 SUPPORTED_CHANNEL_IDS = {"feishu", "telegram", "discord"}
 NON_EXEC_MARKER = "【模型说明-未执行】"
+ALLOWED_TOOLS_EXEC_ASK = {"off", "on-miss", "always"}
 
 
 def log(msg: str) -> None:
@@ -85,8 +87,8 @@ def fail(msg: str, code: int = 1, status: str = "失败") -> None:
     raise GuardError(msg, status=status, code=code)
 
 
-def run(cmd, timeout=60, check=True):
-    return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, check=check)
+def run(cmd, timeout=60, check=True, env=None):
+    return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, check=check, env=env)
 
 
 def load_json(path: Path):
@@ -432,6 +434,82 @@ def plugin_discord(cfg):
                 raise ValueError(f"channels.discord.accounts.{aid} requires botToken or token")
 
 
+def check_enum_constraints(cfg):
+    tools = cfg.get("tools", {}) if isinstance(cfg.get("tools", {}), dict) else {}
+    exec_cfg = tools.get("exec", {}) if isinstance(tools.get("exec", {}), dict) else {}
+    ask = exec_cfg.get("ask")
+    if ask is not None and ask not in ALLOWED_TOOLS_EXEC_ASK:
+        allowed = ", ".join(sorted(ALLOWED_TOOLS_EXEC_ASK))
+        raise ValueError(f"tools.exec.ask must be one of: {allowed}; got: {ask}")
+
+
+def check_agent_model_drift(cfg):
+    expected = {}
+    providers = cfg.get("models", {}).get("providers", {})
+    if not isinstance(providers, dict):
+        return
+    for provider, provider_cfg in providers.items():
+        if not isinstance(provider_cfg, dict):
+            continue
+        expected[provider] = {
+            "baseUrl": provider_cfg.get("baseUrl"),
+            "api": provider_cfg.get("api"),
+        }
+
+    agents_root = OPENCLAW_HOME / "agents"
+    if not agents_root.exists():
+        return
+
+    drifts = []
+    for models_file in agents_root.glob("*/agent/models.json"):
+        try:
+            data = load_json(models_file)
+        except Exception as e:
+            drifts.append(f"{models_file}: unreadable models.json ({e})")
+            continue
+        local_providers = data.get("providers", {}) if isinstance(data, dict) else {}
+        if not isinstance(local_providers, dict):
+            continue
+        for provider, exp_cfg in expected.items():
+            local_cfg = local_providers.get(provider)
+            if not isinstance(local_cfg, dict):
+                continue
+            for field in ("baseUrl", "api"):
+                exp_v = exp_cfg.get(field)
+                local_v = local_cfg.get(field)
+                if exp_v is None or local_v is None:
+                    continue
+                if exp_v != local_v:
+                    drifts.append(
+                        f"{models_file}: provider={provider} {field} drift "
+                        f"(global={exp_v}, agent={local_v})"
+                    )
+
+    if drifts:
+        shown = "\n- ".join(drifts[:8])
+        more = "" if len(drifts) <= 8 else f"\n... and {len(drifts) - 8} more"
+        raise ValueError(f"agent models drift detected:\n- {shown}{more}")
+
+
+def run_openclaw_schema_validate(cfg):
+    with tempfile.TemporaryDirectory(prefix="oc-guard-validate-") as td:
+        temp_home = Path(td)
+        temp_cfg = temp_home / "openclaw.json"
+        dump_json(temp_cfg, cfg)
+        env = os.environ.copy()
+        env["OPENCLAW_CONFIG_PATH"] = str(temp_cfg)
+        proc = run([str(OPENCLAW_BIN), "config", "validate", "--json"], timeout=30, check=False, env=env)
+        out = ((proc.stdout or "") + (proc.stderr or "")).strip()
+        if proc.returncode != 0:
+            raise ValueError(f"openclaw config validate failed: {out}")
+        if out:
+            text = extract_json_object(out)
+            if text:
+                data = json.loads(text)
+                if not data.get("valid", False):
+                    raise ValueError(f"openclaw config validate invalid: {out}")
+
+
 def validate_config(cfg):
     if not isinstance(cfg, dict):
         raise ValueError("config must be object")
@@ -440,6 +518,8 @@ def validate_config(cfg):
     plugin_feishu(cfg)
     plugin_telegram(cfg)
     plugin_discord(cfg)
+    check_enum_constraints(cfg)
+    check_agent_model_drift(cfg)
 
 
 def risk_of_path(path: str) -> str:
@@ -582,11 +662,75 @@ def check_gateway_running():
     return "Runtime: running" in text, text
 
 
+def select_canary_agents(cfg):
+    agents = cfg.get("agents", {}).get("list", [])
+    if not isinstance(agents, list):
+        return []
+    ids = [a.get("id") for a in agents if isinstance(a, dict) and isinstance(a.get("id"), str)]
+    preferred = [aid for aid in ("main", "bro") if aid in ids]
+    if preferred:
+        return preferred
+    return ids[:1]
+
+
+def run_canary_for_agent(agent_id):
+    probe = f"请仅回复：OC_GUARD_CANARY_{agent_id}"
+    proc = run(
+        [
+            str(OPENCLAW_BIN),
+            "agent",
+            "--agent",
+            agent_id,
+            "--message",
+            probe,
+            "--json",
+        ],
+        timeout=120,
+        check=False,
+    )
+    out = ((proc.stdout or "") + (proc.stderr or "")).strip()
+    if proc.returncode != 0:
+        return False, f"agent={agent_id} command failed: {out[:300]}"
+    text = extract_json_object(out)
+    if not text:
+        return False, f"agent={agent_id} returned non-json output"
+    data = json.loads(text)
+    if data.get("status") != "ok":
+        return False, f"agent={agent_id} status != ok"
+    payloads = data.get("result", {}).get("payloads", [])
+    if not isinstance(payloads, list) or not payloads:
+        return False, f"agent={agent_id} empty payloads"
+    has_content = any(
+        isinstance(item, dict) and (
+            (isinstance(item.get("text"), str) and item.get("text").strip())
+            or (isinstance(item.get("mediaUrl"), str) and item.get("mediaUrl").strip())
+        )
+        for item in payloads
+    )
+    if not has_content:
+        return False, f"agent={agent_id} payloads have no content"
+    return True, f"agent={agent_id} canary ok"
+
+
+def run_post_apply_canary(cfg):
+    targets = select_canary_agents(cfg)
+    if not targets:
+        return ["canary skipped: no agents configured"]
+    notes = []
+    for aid in targets:
+        ok, msg = run_canary_for_agent(aid)
+        notes.append(msg)
+        if not ok:
+            raise ValueError(f"post-apply canary failed: {msg}")
+    return notes
+
+
 def do_plan(requirement, proposal_file, config_file):
     cfg = load_json(config_file)
     proposal = load_json(Path(proposal_file)) if proposal_file else generate_proposal(requirement, config_file)
     modified, applied, risk = apply_changes(cfg, proposal)
     validate_config(modified)
+    run_openclaw_schema_validate(modified)
 
     LAST_PROPOSAL_PATH.write_text(json.dumps(proposal, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     report = {
@@ -600,6 +744,9 @@ def do_plan(requirement, proposal_file, config_file):
     lines = []
     lines.append(f"意图 | Intent: {proposal.get('intent', '(none)')}")
     lines.append(f"风险等级 | Risk: {risk}")
+    lines.append("校验阶段 | Validation Stages:")
+    lines.append("- custom-validate: pass")
+    lines.append("- openclaw-config-validate: pass")
     lines.append("变更列表 | Changes:")
     for item in applied:
         if item["op"] == "set":
@@ -616,6 +763,7 @@ def do_apply(requirement, proposal_file, config_file, confirm):
     proposal = load_json(Path(proposal_file)) if proposal_file else generate_proposal(requirement, config_file)
     modified, applied, risk = apply_changes(cfg, proposal)
     validate_config(modified)
+    run_openclaw_schema_validate(modified)
 
     if risk == "high" and not confirm:
         fail("高风险变更需要 --confirm | High-risk changes require --confirm", status="阻断")
@@ -644,13 +792,28 @@ def do_apply(requirement, proposal_file, config_file, confirm):
         run([str(OPENCLAW_BIN), "gateway", "restart"], timeout=60, check=False)
         fail("gateway unhealthy after apply; rolled back")
 
+    try:
+        canary_notes = run_post_apply_canary(modified)
+    except Exception as e:
+        log(f"Post-apply canary failed, rolling back: {e}")
+        shutil.copy2(backup_file, config_file)
+        run([str(OPENCLAW_BIN), "gateway", "restart"], timeout=60, check=False)
+        fail(f"post-apply canary failed; rolled back: {e}")
+
     lines = [
         f"已应用变更数 | Applied Changes: {len(applied)}",
         f"风险等级 | Risk: {risk}",
         "网关状态 | Gateway: running",
+        "校验阶段 | Validation Stages:",
+        "- custom-validate: pass",
+        "- openclaw-config-validate: pass",
+        "- gateway-health: pass",
         f"备份文件 | Backup File: {backup_file}",
+        "Canary:",
         "变更列表 | Changes:",
     ]
+    for note in canary_notes:
+        lines.append(f"- {note}")
     for item in applied:
         if item["op"] == "set":
             lines.append(f"- 设置 | set {item['path']} = {item['value']}")

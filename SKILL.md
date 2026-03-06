@@ -1,6 +1,7 @@
 ---
 name: oc_guard
 description: Safe OpenClaw config planning/apply workflow with bilingual execution receipts.
+metadata: {"openclaw":{"requires":{"bins":["python3","openclaw","opencode"]}}}
 ---
 
 # oc-guard Skill
@@ -8,6 +9,7 @@ description: Safe OpenClaw config planning/apply workflow with bilingual executi
 ## Purpose
 All config-changing requests must go through `oc-guard`.
 Do not directly edit `~/.openclaw/openclaw.json`.
+When possible, invoke the bundled CLI at `{baseDir}/scripts/oc-guard`.
 
 ## Hard Rules
 1. Use `oc-guard plan` before apply.
@@ -17,8 +19,8 @@ Do not directly edit `~/.openclaw/openclaw.json`.
 5. Never claim success without a real `oc-guard` receipt.
 
 ## Common Commands
-- `oc-guard --help`
-- `oc-guard plan "<requirement>"`
-- `oc-guard apply --confirm "<requirement>"`
-- `oc-guard plan --proposal <file>`
-- `oc-guard apply --confirm --proposal <file>`
+- `{baseDir}/scripts/oc-guard --help`
+- `{baseDir}/scripts/oc-guard plan "<requirement>"`
+- `{baseDir}/scripts/oc-guard apply --confirm "<requirement>"`
+- `{baseDir}/scripts/oc-guard plan --proposal <file>`
+- `{baseDir}/scripts/oc-guard apply --confirm --proposal <file>`

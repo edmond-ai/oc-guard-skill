@@ -29,7 +29,11 @@ Safe config guard for OpenClaw.
 - 自然语言转受控提案（`plan`） / Natural language to guarded proposal (`plan`)
 - 高风险确认门槛（`apply --confirm`） / High-risk confirmation gate
 - 校验渠道、绑定、agent、模型引用 / Validate channels, bindings, agents, model references
+- 关键枚举值校验（如 `tools.exec.ask`） / Enum guardrails for risky fields (e.g. `tools.exec.ask`)
+- 官方 `openclaw config validate` 二次校验 / Secondary validation via `openclaw config validate`
+- 全局与 agent 本地模型配置漂移检查 / Drift detection between global and agent-local model configs
 - 应用前自动备份 / Auto backup before apply
+- 应用后 canary（main/bro）可用性探测 / Post-apply canary checks (main/bro)
 - 失败自动回滚 / Auto rollback on failure
 - 12位验签码执行回执 / 12-char signed execution receipt
 
@@ -106,6 +110,19 @@ If not executed, must return:
 
 `plan` 失败时可查看：`/tmp/oc-guard-last-opencode-output.txt`（仅用于本机诊断）。  
 If `plan` fails, inspect `/tmp/oc-guard-last-opencode-output.txt` for local diagnostics.
+
+## 发布后验收 | Post-publish Verification
+
+每次发布到 ClawHub 后，至少执行以下检查：
+After each ClawHub publish, run at least the checks below:
+
+```bash
+clawhub inspect oc-guard-skill --files
+clawhub inspect oc-guard-skill --file SKILL.md
+```
+
+- `--files` 输出中必须包含 `scripts/oc-guard`
+- `SKILL.md` frontmatter 必须包含 `metadata.openclaw.requires`（声明所需二进制/环境）
 
 ## 安全说明 | Security Notes
 

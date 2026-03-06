@@ -15,6 +15,7 @@ This skill provides guarded OpenClaw config operations.
 4. Roll back automatically if restart/health check fails.
 5. Never expose secrets in logs or receipts.
 6. If `plan` or `apply` returns failed/blocked, never bypass `oc-guard` by directly editing config.
+7. `Runtime: running` is not enough; apply must pass post-restart canary replies.
 
 ## Secret Handling
 
@@ -47,3 +48,10 @@ Receipt output must include:
 If command is not executed, output must explicitly state non-execution.
 
 If proposal generation fails, inspect `/tmp/oc-guard-last-opencode-output.txt` for diagnostics.
+
+## ClawHub Packaging Consistency
+
+Before trusting a published version, verify:
+
+- `clawhub inspect oc-guard-skill --files` includes `scripts/oc-guard`
+- `clawhub inspect oc-guard-skill --file SKILL.md` includes `metadata.openclaw.requires`

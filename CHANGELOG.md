@@ -2,6 +2,22 @@
 
 All notable changes to this project are documented here.
 
+## [1.1.0] - 2026-03-06
+
+### Added
+- Added official `openclaw config validate` checks in both `plan` and `apply` flows
+- Added enum guardrails for high-risk fields (including `tools.exec.ask`)
+- Added drift detection between global provider settings and `~/.openclaw/agents/*/agent/models.json`
+- Added post-apply canary checks using local agent turns (prefer `main` and `bro`)
+
+### Fixed
+- Updated skill metadata with `metadata.openclaw.requires` so runtime prerequisites are explicit
+- Updated skill instructions to invoke bundled CLI via `{baseDir}/scripts/oc-guard`
+- Added publish verification guidance to ensure ClawHub package includes `scripts/oc-guard`
+
+### Security
+- Treat "gateway running" as insufficient success signal; rollback now triggers when canary response validation fails
+
 ## [1.0.3] - 2026-03-05
 
 ### Fixed
