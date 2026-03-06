@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented here.
 
+## [1.1.1] - 2026-03-06
+
+### Changed
+- Refreshed `README.md` with a navigation table of contents and release/tag guidance
+
+### Docs
+- Added release checklist details covering changelog, tag, GitHub Release, and ClawHub verification order
+
 ## [1.1.0] - 2026-03-06
 
 ### Added

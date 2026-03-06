@@ -14,6 +14,22 @@ This project is now publicly available on GitHub and ClawHub.
 - 机制：先 `plan`，后 `apply --confirm`，失败自动回滚。  
   Workflow: `plan` first, then `apply --confirm`, with automatic rollback on failure.
 
+## 目录 | Table of Contents
+
+- [简介 | Overview](#简介--overview)
+- [功能 | Features](#功能--features)
+- [包含文件 | Included Files](#包含文件--included-files)
+- [不包含 | Not Included](#不包含--not-included)
+- [前置依赖 | Prerequisites](#前置依赖--prerequisites)
+- [安装 | Install](#安装--install)
+- [环境变量覆盖 | Environment Overrides](#环境变量覆盖--environment-overrides)
+- [使用方法 | Usage](#使用方法--usage)
+- [输出协议 | Output Contract](#输出协议--output-contract)
+- [发布后验收 | Post-publish Verification](#发布后验收--post-publish-verification)
+- [安全说明 | Security Notes](#安全说明--security-notes)
+- [标签与发布 | Tags and Releases](#标签与发布--tags-and-releases)
+- [许可证 | License](#许可证--license)
+
 ## 简介 | Overview
 
 OpenClaw 配置安全守卫工具。  
@@ -123,6 +139,16 @@ clawhub inspect oc-guard-skill --file SKILL.md
 
 - `--files` 输出中必须包含 `scripts/oc-guard`
 - `SKILL.md` frontmatter 必须包含 `metadata.openclaw.requires`（声明所需二进制/环境）
+
+## 标签与发布 | Tags and Releases
+
+- Git 标签遵循语义化版本：`vMAJOR.MINOR.PATCH`
+- 发布顺序：更新 `CHANGELOG.md` -> 创建 tag -> 创建 GitHub Release -> 校验 ClawHub 包内容
+- 每次发布都应附带可核验信息：
+  - 关键变更摘要（why > what）
+  - 受影响文件路径
+  - 本地验证命令与结果
+  - ClawHub `inspect --files` 验收结果
 
 ## 安全说明 | Security Notes
 
