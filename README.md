@@ -64,6 +64,7 @@ Safe config guard for OpenClaw.
 
 - `SKILL.md`
 - `scripts/oc-guard`
+- `scripts/oc-guard.py`
 - `templates/proposal.template.json`
 - `docs/SAFETY.md`
 - `CHANGELOG.md`
@@ -144,7 +145,7 @@ clawhub inspect oc-guard-skill --files
 clawhub inspect oc-guard-skill --file SKILL.md
 ```
 
-- `--files` 输出中必须包含 `scripts/oc-guard`
+- `--files` 输出中必须包含 `scripts/oc-guard.py`
 - `SKILL.md` frontmatter 必须包含 `metadata.openclaw.requires`（声明所需二进制/环境）
 
 ## 标签与发布 | Tags and Releases

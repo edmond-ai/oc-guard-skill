@@ -57,5 +57,5 @@ If proposal generation fails, inspect `/tmp/oc-guard-last-opencode-output.txt` f
 
 Before trusting a published version, verify:
 
-- `clawhub inspect oc-guard-skill --files` includes `scripts/oc-guard`
+- `clawhub inspect oc-guard-skill --files` includes `scripts/oc-guard.py`
 - `clawhub inspect oc-guard-skill --file SKILL.md` includes `metadata.openclaw.requires`

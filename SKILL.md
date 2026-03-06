@@ -9,7 +9,7 @@ metadata: {"openclaw":{"requires":{"bins":["python3","openclaw","opencode"]}}}
 ## Purpose
 All config-changing requests must go through `oc-guard`.
 Do not directly edit `~/.openclaw/openclaw.json`.
-When possible, invoke the bundled CLI at `{baseDir}/scripts/oc-guard`.
+When possible, invoke the bundled CLI at `{baseDir}/scripts/oc-guard.py`.
 
 ## Hard Rules
 1. Use `oc-guard plan` before apply.
@@ -19,8 +19,8 @@ When possible, invoke the bundled CLI at `{baseDir}/scripts/oc-guard`.
 5. Never claim success without a real `oc-guard` receipt.
 
 ## Common Commands
-- `{baseDir}/scripts/oc-guard --help`
-- `{baseDir}/scripts/oc-guard plan "<requirement>"`
-- `{baseDir}/scripts/oc-guard apply --confirm "<requirement>"`
-- `{baseDir}/scripts/oc-guard plan --proposal <file>`
-- `{baseDir}/scripts/oc-guard apply --confirm --proposal <file>`
+- `{baseDir}/scripts/oc-guard.py --help`
+- `{baseDir}/scripts/oc-guard.py plan "<requirement>"`
+- `{baseDir}/scripts/oc-guard.py apply --confirm "<requirement>"`
+- `{baseDir}/scripts/oc-guard.py plan --proposal <file>`
+- `{baseDir}/scripts/oc-guard.py apply --confirm --proposal <file>`

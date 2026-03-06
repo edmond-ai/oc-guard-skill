@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented here.
 
+## [1.1.2] - 2026-03-06
+
+### Fixed
+- Added `scripts/oc-guard.py` so ClawHub package includes a concrete executable CLI file
+- Updated skill command examples to use `{baseDir}/scripts/oc-guard.py` for package consistency checks
+
+### Docs
+- Updated publish verification checklist to assert `scripts/oc-guard.py` is present in ClawHub package files
+
 ## [1.1.1] - 2026-03-06
 
 ### Changed
